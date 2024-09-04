@@ -3,7 +3,7 @@ import express from "express";
 const app = express();
 
 app.get("health-check", (req, res) => {
-  res.send("Server is running :)");
+  res.send("Server A is running :)");
 });
 
 app.listen(4001, () => {
