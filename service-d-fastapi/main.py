@@ -7,4 +7,3 @@ app = FastAPI()
 @app.get("/health-check")
 def healthCheck():
     return 'Service D is running'
-
