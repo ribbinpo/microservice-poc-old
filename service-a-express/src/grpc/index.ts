@@ -6,69 +6,76 @@ import { ProtoGrpcType } from "./proto_gen/example";
 import { ClientMessage } from "./proto_gen/example_package/ClientMessage";
 import { ServerMessage } from "./proto_gen/example_package/ServerMessage";
 
-
-const PORT = "50051";
+const PORT = 50051;
 const PROTO_FILE = "src/grpc/proto/example.proto";
 
 const exampleServer: ExampleHandlers = {
-  unaryCall(
-    call: grpc.ServerUnaryCall<ClientMessage, ServerMessage>,
-    callback: grpc.sendUnaryData<ServerMessage>
-  ) {
-    if (call.request) {
-      console.log(`(server) Got client message: ${call.request.clientMessage}`);
-    }
-    callback(null, {
-      serverMessage: 'Message from server',
-    });
-  },
-
-  serverStreamingCall(
-    call: grpc.ServerWritableStream<ClientMessage, ServerMessage>
-  ) {
-    call.write({
-      serverMessage: 'Message from server',
-    });
-  },
-
-  clientStreamingCall(
-    call: grpc.ServerReadableStream<ClientMessage, ServerMessage>
-  ) {
-    call.on('data', (clientMessage: ClientMessage) => {
-      console.log(
-        `(server) Got client message: ${clientMessage.clientMessage}`
-      );
-    });
-  },
-
-  bidirectionalStreamingCall(
-    call: grpc.ServerDuplexStream<ClientMessage, ServerMessage>
-  ) {
-    call.write({
-      serverMessage: 'Message from server',
-    });
-    call.on('data', (clientMessage: ClientMessage) => {
-      console.log(
-        `(server) Got client message: ${clientMessage.clientMessage}`
-      );
-    });
-  },
+  unaryCall: handleUnaryCall,
+  serverStreamingCall: handleServerStreamingCall,
+  clientStreamingCall: handleClientStreamingCall,
+  bidirectionalStreamingCall: handleBidirectionalStreamingCall,
 };
 
-function main() {
+function handleUnaryCall(
+  call: grpc.ServerUnaryCall<ClientMessage, ServerMessage>,
+  callback: grpc.sendUnaryData<ServerMessage>
+) {
+  if (call.request) {
+    console.log(`(server) Got client message: ${call.request.clientMessage}`);
+  }
+  callback(null, {
+    serverMessage: 'Message from server',
+  });
+}
+
+function handleServerStreamingCall(
+  call: grpc.ServerWritableStream<ClientMessage, ServerMessage>
+) {
+  call.write({
+    serverMessage: 'Message from server',
+  });
+}
+
+function handleClientStreamingCall(
+  call: grpc.ServerReadableStream<ClientMessage, ServerMessage>
+) {
+  call.on('data', (clientMessage: ClientMessage) => {
+    console.log(
+      `(server) Got client message: ${clientMessage.clientMessage}`
+    );
+  });
+}
+
+function handleBidirectionalStreamingCall(
+  call: grpc.ServerDuplexStream<ClientMessage, ServerMessage>
+) {
+  call.write({
+    serverMessage: 'Message from server',
+  });
+  call.on('data', (clientMessage: ClientMessage) => {
+    console.log(
+      `(server) Got client message: ${clientMessage.clientMessage}`
+    );
+  });
+}
+
+function loadProtoFile(): ProtoGrpcType {
   const packageDefinition = protoLoader.loadSync(PROTO_FILE, {
     longs: String,
     enums: String,
     defaults: true,
     oneofs: true,
   });
-  const proto = grpc.loadPackageDefinition(
-    packageDefinition
-  ) as unknown as ProtoGrpcType;
+  return grpc.loadPackageDefinition(packageDefinition) as unknown as ProtoGrpcType;
+}
+
+function createServer(proto: ProtoGrpcType): grpc.Server {
   const server = new grpc.Server();
-
   server.addService(proto.example_package.Example.service, exampleServer);
+  return server;
+}
 
+function startServer(server: grpc.Server) {
   server.bindAsync(
     `0.0.0.0:${PORT}`,
     grpc.ServerCredentials.createInsecure(),
@@ -81,6 +88,12 @@ function main() {
       server.start();
     }
   );
+}
+
+function main() {
+  const proto = loadProtoFile();
+  const server = createServer(proto);
+  startServer(server);
 }
 
 export default main;
