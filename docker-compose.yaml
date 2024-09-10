@@ -1,6 +1,7 @@
 services:
   kafka:
     container_name: kafka
+    hostname: localhost
     image: bitnami/kafka:latest
     networks:
       - kafka-network
