@@ -1,10 +1,12 @@
 import * as grpc from "@grpc/grpc-js";
 import * as protoLoader from "@grpc/proto-loader";
+import * as fs from "fs";
+import path from "path";
 
 import { ProtoGrpcType } from "../proto_gen/example";
 import { ServerMessage } from "../proto_gen/example_package/ServerMessage";
 
-const host = "0.0.0.0:50051";
+const host = "localhost:50051";
 const packageDefinition = protoLoader.loadSync("src/grpc/proto/example.proto", {
   longs: String,
   enums: String,
@@ -15,9 +17,18 @@ const proto = grpc.loadPackageDefinition(
   packageDefinition
 ) as unknown as ProtoGrpcType;
 
+// uncomment this line to use SSL
+// const credentials = grpc.credentials.createSsl(
+//   fs.readFileSync(path.join(__dirname, "../../../certs/ca.crt")),
+//   fs.readFileSync(path.join(__dirname, "../../../certs/client.key")),
+//   fs.readFileSync(path.join(__dirname, "../../../certs/client.crt")),
+// );
+
+// for SSL, comment grpc.credentials.createInsecure(), and uncomment credentials
 const client = new proto.example_package.Example(
   host,
-  grpc.credentials.createInsecure()
+  grpc.credentials.createInsecure(),
+  // credentials,
 );
 
 const deadline = new Date();
@@ -50,10 +61,13 @@ function onClientReady() {
 }
 
 function doUnaryCall() {
+  const meta = new grpc.Metadata();
+  meta.set("auth", "value"); // add metadata JWT token
   client.unaryCall(
     {
       clientMessage: "Message from client",
     },
+    meta,
     (error?: grpc.ServiceError | null, serverMessage?: ServerMessage) => {
       if (error) {
         console.error(error.message);
@@ -67,16 +81,21 @@ function doUnaryCall() {
 }
 
 function doServerStreamingCall() {
+  const meta = new grpc.Metadata();
+  meta.set("auth", "value"); // add metadata JWT token
   const stream = client.serverStreamingCall({
     clientMessage: "Message from client",
-  });
+  }, meta);
   stream.on("data", (serverMessage: ServerMessage) => {
     console.log(`(client) Got server message: ${serverMessage.serverMessage}`);
   });
 }
 
 function doClientStreamingCall() {
+  const meta = new grpc.Metadata();
+  meta.set("auth", "value"); // add metadata JWT token
   const stream = client.clientStreamingCall(
+    meta,
     (error?: grpc.ServiceError | null) => {
       if (error) {
         console.error(error.message);
@@ -89,7 +108,9 @@ function doClientStreamingCall() {
 }
 
 function doBidirectionalStreamingCall() {
-  const stream = client.bidirectionalStreamingCall();
+  const meta = new grpc.Metadata();
+  meta.set("auth", "value"); // add metadata JWT token
+  const stream = client.bidirectionalStreamingCall(meta);
 
   // Server stream
   stream.on("data", (serverMessage: ServerMessage) => {

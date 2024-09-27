@@ -5,6 +5,7 @@
   "scripts": {
     "build:proto": "proto-loader-gen-types --grpcLib=@grpc/grpc-js --outDir=src/grpc/proto_gen src/grpc/proto/*.proto",
     "dev": "nodemon --config nodemon.json",
+    "dev:grpc": "nodemon --config nodemon-grpc.json",
     "build": "npx tsc",
     "start": "node dist/index.js",
     "start:client": "node dist/grpc/test/client.js",
