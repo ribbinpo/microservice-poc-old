@@ -2,6 +2,7 @@ package main
 
 import (
 	"context"
+	"fmt"
 	"io"
 	"log"
 	"net"
@@ -22,6 +23,7 @@ type server struct {
 // Implement the unaryCall method
 func (s *server) UnaryCall(ctx context.Context, req *proto_gen.ClientMessage) (*proto_gen.ServerMessage, error) {
 	// Your logic here
+	fmt.Print("Received: ", req.ClientMessage)
 	return &proto_gen.ServerMessage{ServerMessage: "Received: " + req.ClientMessage}, nil
 }
 
@@ -69,12 +71,33 @@ func (s *server) BidirectionalStreamingCall(stream proto_gen.Example_Bidirection
 	}
 }
 
+// func loadTLSCredentials() (credentials.TransportCredentials, error) {
+// 	// Load server's certificate and private key
+// 	serverCert, err := tls.LoadX509KeyPair("../certs/server.crt", "../certs/server.key")
+// 	if err != nil {
+// 		return nil, err
+// 	}
+
+// 	// Create the credentials and return it
+// 	config := &tls.Config{
+// 		Certificates: []tls.Certificate{serverCert},
+// 		ClientAuth:   tls.NoClientCert,
+// 	}
+
+// 	return credentials.NewTLS(config), nil
+// }
+
 func main() {
 	// Set up gRPC server
 	lis, err := net.Listen("tcp", ":50051")
 	if err != nil {
 		log.Fatalf("failed to listen: %v", err)
 	}
+	// tlsCredentials, err := loadTLSCredentials()
+	// if err != nil {
+	// 	log.Fatal("cannot load TLS credentials: ", err)
+	// }
+	// s := grpc.NewServer(grpc.Creds(tlsCredentials))
 	s := grpc.NewServer()
 	proto_gen.RegisterExampleServer(s, &server{})
 
