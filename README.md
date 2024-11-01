@@ -5,7 +5,7 @@ This repository serves as a proof of concept (PoC) for microservices using multi
 ## TODO
 - [x] Basic ExpressJS
 - [ ] Basic ElysiaJS
-- [ ] Basic GoFiber
+- [x] Basic GoFiber
 - [ ] Basic FastAPI
-- [ ] gRPC for secure communication
+- [x] gRPC for secure communication
 - [ ] Integrate together
