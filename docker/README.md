@@ -8,32 +8,44 @@ To perform a Kafka action, use the following command:
 docker compose up -d
 ```
 
-To create a topic, use the following command:
+Create Topic
 
 ```bash
-docker exec -it kafka kafka-topics.sh --create --topic my-topic --bootstrap-server kafka:9092
+# Enter the Kafka container
+docker exec -it kafka1 /bin/sh
+
+# Go to Kafka binaries (Bitnami places them in /opt/bitnami/kafka/bin)
+cd /opt/bitnami/kafka/bin
+
+# Create a topic (no --zookeeper needed!)
+kafka-topics.sh --create \
+  --bootstrap-server kafka1:9092 \
+  --replication-factor 1 \
+  --partitions 1 \
+  --topic hello_kafka
 ```
 
-To list all topics, use the following command:
+List All Topics
 
 ```bash
-docker exec -it kafka kafka-topics.sh --list --bootstrap-server kafka:9092
+kafka-topics.sh --list --bootstrap-server kafka1:9092
 ```
 
-To produce messages to a topic, use the following command:
+Topic Details
 
 ```bash
-docker exec -it kafka kafka-console-producer.sh --topic my-topic --bootstrap-server kafka:9092
+kafka-topics.sh --describe --bootstrap-server kafka1:9092 --topic hello_kafka
 ```
 
-To consume messages from a topic, use the following command:
+Create Producer
 
 ```bash
-docker exec -it kafka kafka-console-consumer.sh --topic my-topic --from-beginning --bootstrap-server kafka:9092
+kafka-console-producer.sh --bootstrap-server kafka1:9092 --topic hello_kafka
+# then type messages...
 ```
 
-To check the status of the Kafka cluster, use the following command:
+Listening Consumer
 
 ```bash
-docker exec -it kafka kafka-topics.sh --describe --topic my-topic --bootstrap-server kafka:9092
+kafka-console-consumer.sh --bootstrap-server kafka1:9092 --topic hello_kafka --from-beginning
 ```
